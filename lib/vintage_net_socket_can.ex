@@ -53,12 +53,17 @@ defmodule VintageNetSocketCAN do
   end
 
   defp up_cmds(ifname, config) do
-    [
-      maybe_add_interface(ifname),
-      run_ip_config_command(ifname, config)
-    ]
+    maybe_add_interface(ifname)
+    |> add_run_ip_config_command(ifname, config)
     |> maybe_add_ifconfig_cmd(ifname, config[:txqueuelen])
     |> add_ip_up_cmd(ifname)
+  end
+
+  defp add_run_ip_config_command(commands, ifname, config) do
+    commands ++
+      [
+        run_ip_config_command(ifname, config)
+      ]
   end
 
   defp run_ip_config_command(ifname, config) do
@@ -140,7 +145,7 @@ defmodule VintageNetSocketCAN do
   defp maybe_add_interface(ifname) do
     case System.cmd("ip", ["link", "show", ifname]) do
       {_, 0} -> []
-      _ -> {:run_ignore_errors, "ip", ["link", "add", ifname, "type", "can"]}
+      _ -> [{:run_ignore_errors, "ip", ["link", "add", ifname, "type", "can"]}]
     end
   end
 end
