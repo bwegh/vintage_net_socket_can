@@ -13,16 +13,7 @@ defmodule VintageNetSocketCAN do
 
   @impl VintageNet.Technology
   def normalize(%{type: __MODULE__} = config) do
-    socket_can_config = Map.get(config, :vintage_net_socket_can)
-
-    default =
-      %{
-        sample_point: 0.825,
-        loopback: false,
-        listen_only: false
-      }
-
-    normalized = Map.merge(default, socket_can_config)
+    normalized = Map.get(config, :vintage_net_socket_can)
 
     # check the options to ensure they are the right type and present
     for {key, type} <- @required_options do
