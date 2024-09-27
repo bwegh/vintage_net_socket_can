@@ -6,6 +6,7 @@ defmodule VintageNetSocketCAN do
   @behaviour VintageNet.Technology
 
   alias VintageNet.Interface.RawConfig
+  require Logger
 
   @required_options [
     {:bitrate, :integer}
@@ -25,12 +26,16 @@ defmodule VintageNetSocketCAN do
       end
     end
 
+    Logger.debug("settings are: #{inspect(normalized)}")
     %{type: __MODULE__, vintage_net_socket_can: normalized}
   end
 
   @impl VintageNet.Technology
   def to_raw_config(ifname, %{type: __MODULE__} = config, _opts) do
     normalized_config = Map.get(config, :vintage_net_socket_can, %{})
+    up_cmds = up_cmds(ifname, normalized_config)
+
+    Logger.debug("up commands are: #{inspect(up_cmds)}")
 
     %RawConfig{
       ifname: ifname,
@@ -38,7 +43,7 @@ defmodule VintageNetSocketCAN do
       source_config: config,
       required_ifnames: [],
       child_specs: [{VintageNet.Connectivity.LANChecker, ifname}],
-      up_cmds: up_cmds(ifname, normalized_config),
+      up_cmds: up_cmds,
       up_cmd_millis: 5_000,
       down_cmds: [
         {:run_ignore_errors, "ip", ["addr", "flush", "dev", ifname, "label", ifname]},
