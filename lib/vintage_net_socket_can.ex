@@ -8,10 +8,7 @@ defmodule VintageNetSocketCAN do
   alias VintageNet.Interface.RawConfig
 
   @required_options [
-    {:bitrate, :integer},
-    {:sample_point, :float},
-    {:loopback, :boolean},
-    {:listen_only, :boolean}
+    {:bitrate, :integer}
   ]
 
   @impl VintageNet.Technology
