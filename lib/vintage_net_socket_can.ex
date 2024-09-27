@@ -50,24 +50,86 @@ defmodule VintageNetSocketCAN do
   defp up_cmds(ifname, config) do
     [
       maybe_add_interface(ifname),
-      {:run, "ip",
-       [
-         "link",
-         "set",
-         ifname,
-         "type",
-         "can",
-         "bitrate",
-         Integer.to_string(config[:bitrate]),
-         "sample-point",
-         Float.to_string(config[:sample_point]),
-         "loopback",
-         if(config[:loopback], do: "on", else: "off"),
-         "listen-only",
-         if(config[:listen_only], do: "on", else: "off")
-       ]},
-      {:run, "ip", ["link", "set", ifname, "up"]}
+      run_ip_config_command(ifname, config)
     ]
+    |> maybe_add_ifconfig_cmd(ifname, config[:txqueuelen])
+    |> add_ip_up_cmd(ifname)
+  end
+
+  defp run_ip_config_command(ifname, config) do
+    parameter =
+      ip_default_parameter(ifname)
+      |> ip_maybe_add_sample_point(config[:sample_point])
+      |> ip_maybe_add_loopback(config[:loopback])
+      |> ip_maybe_add_listen_only(config[:listen_only])
+
+    {:run, "ip", parameter}
+  end
+
+  defp ip_default_parameter(ifname) do
+    [
+      "link",
+      "set",
+      ifname,
+      "type",
+      "can",
+      "bitrate",
+      Integer.to_string(config[:bitrate])
+    ]
+  end
+
+  def ip_maybe_add_sample_point(current_params, sample_point) do
+    if is_float(sample_point) do
+      current_params ++
+        [
+          "sample-point",
+          Float.to_string(sample_point)
+        ]
+    else
+      current_params
+    end
+  end
+
+  def ip_maybe_add_loopback(current_params, loopback) do
+    if is_boolean(loopback) do
+      current_params ++
+        [
+          "loopback",
+          if(loopback, do: "on", else: "off")
+        ]
+    else
+      current_params
+    end
+  end
+
+  def maybe_add_ifconfig_cmd(current_commands, txqueuelen) do
+    if is_integer(txqueuelen) do
+      current_commands ++
+        [
+          {:run, "ifconfig", [ifname, "txqueuelen", Integer.to_string(txqueuelen)]}
+        ]
+    else
+      current_commands
+    end
+  end
+
+  def add_ip_up_command(current_commands, ifname) do
+    current_commands ++
+      [
+        {:run, "ip", ["link", "set", ifname, "up"]}
+      ]
+  end
+
+  def ip_maybe_add_listen_only(current_params, listen_only) do
+    if is_boolean(listen_only) do
+      current_params ++
+        [
+          "listen-only",
+          if(listen_only, do: "on", else: "off")
+        ]
+    else
+      current_params
+    end
   end
 
   defp maybe_add_interface(ifname) do
