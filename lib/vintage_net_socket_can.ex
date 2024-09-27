@@ -58,7 +58,7 @@ defmodule VintageNetSocketCAN do
 
   defp run_ip_config_command(ifname, config) do
     parameter =
-      ip_default_parameter(ifname)
+      ip_default_parameter(ifname, config)
       |> ip_maybe_add_sample_point(config[:sample_point])
       |> ip_maybe_add_loopback(config[:loopback])
       |> ip_maybe_add_listen_only(config[:listen_only])
@@ -66,7 +66,7 @@ defmodule VintageNetSocketCAN do
     {:run, "ip", parameter}
   end
 
-  defp ip_default_parameter(ifname) do
+  defp ip_default_parameter(ifname, config) do
     [
       "link",
       "set",
@@ -102,7 +102,7 @@ defmodule VintageNetSocketCAN do
     end
   end
 
-  def maybe_add_ifconfig_cmd(current_commands, txqueuelen) do
+  def maybe_add_ifconfig_cmd(current_commands, ifname, txqueuelen) do
     if is_integer(txqueuelen) do
       current_commands ++
         [
@@ -113,7 +113,7 @@ defmodule VintageNetSocketCAN do
     end
   end
 
-  def add_ip_up_command(current_commands, ifname) do
+  def add_ip_up_cmd(current_commands, ifname) do
     current_commands ++
       [
         {:run, "ip", ["link", "set", ifname, "up"]}
